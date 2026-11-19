@@ -1,0 +1,15 @@
+material,cost,press_time_s,foundry_time_s,product,sell_price
+Scrap Iron,10,4,6,Iron Ingot,25
+Scrap Copper,15,5,7,Copper Ingot,35
+Scrap Aluminum,12,3,5,Aluminum Ingot,28
+Scrap Steel,20,6,8,Steel Beam,50
+Scrap Brass,18,5,7,Brass Gear,45
+Scrap Tin,8,3,4,Tin Plate,20
+Scrap Zinc,9,4,5,Zinc Bolt,22
+Scrap Lead,7,3,6,Lead Weight,18
+Scrap Nickel,25,6,9,Nickel Coin,60
+Scrap Bronze,22,6,8,Bronze Statue,55
+Scrap Silver,40,7,10,Silver Bar,95
+Scrap Gold,80,8,12,Gold Bar,180
+Scrap Titanium,35,7,10,Titanium Plate,85
+Scrap Wire,14,4,5,Copper Wire,32

@@ -1,0 +1,107 @@
+[gd_scene load_steps=2 format=3 uid="uid://hydraulicpressfoundry1"]
+
+[ext_resource type="Script" path="res://scripts/workshop.gd" id="1"]
+
+[node name="Workshop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 64.0
+
+[node name="TitleLabel" type="Label" parent="TopBar"]
+layout_mode = 2
+text = "Hydraulic Press & Foundry"
+
+[node name="CoinsLabel" type="Label" parent="TopBar"]
+layout_mode = 2
+text = "Coins: 100"
+
+[node name="OrdersPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 72.0
+offset_bottom = 140.0
+
+[node name="OrderLabel" type="Label" parent="OrdersPanel"]
+layout_mode = 2
+text = "Order: 1x Iron Ingot — pays 25 coins"
+
+[node name="MarketPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 148.0
+offset_bottom = 360.0
+
+[node name="MarketList" type="ItemList" parent="MarketPanel"]
+layout_mode = 2
+
+[node name="WorkshopPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 368.0
+offset_bottom = 760.0
+
+[node name="PressBar" type="ProgressBar" parent="WorkshopPanel"]
+layout_mode = 2
+max_value = 100.0
+show_percentage = true
+
+[node name="MeltBar" type="ProgressBar" parent="WorkshopPanel"]
+layout_mode = 2
+max_value = 100.0
+show_percentage = true
+
+[node name="InventoryLabel" type="Label" parent="WorkshopPanel"]
+layout_mode = 2
+text = "Inventory: empty"
+
+[node name="PressButton" type="Button" parent="WorkshopPanel"]
+layout_mode = 2
+text = "PRESS"
+
+[node name="MeltButton" type="Button" parent="WorkshopPanel"]
+layout_mode = 2
+text = "MELT"
+
+[node name="CastButton" type="Button" parent="WorkshopPanel"]
+layout_mode = 2
+text = "CAST"
+
+[node name="SellButton" type="Button" parent="WorkshopPanel"]
+layout_mode = 2
+text = "SELL"
+
+[node name="UpgradesPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 768.0
+offset_bottom = 880.0
+
+[node name="PressUpgradeButton" type="Button" parent="UpgradesPanel"]
+layout_mode = 2
+text = "Upgrade Press (Lv 1) — 75 coins"
+
+[node name="FurnaceUpgradeButton" type="Button" parent="UpgradesPanel"]
+layout_mode = 2
+text = "Upgrade Furnace (Lv 1) — 100 coins"
+
+[node name="StatusLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 888.0
+offset_bottom = 940.0
+text = "Welcome! Check the order, then buy scrap."
