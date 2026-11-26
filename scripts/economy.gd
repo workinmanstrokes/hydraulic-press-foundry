@@ -48,6 +48,15 @@ func load_content() -> void:
 		}
 
 
+func all_materials() -> Array[String]:
+	# Material names in locked v1 order (the order of data/content.csv).
+	# Dictionary keeps insertion order, so this matches the spreadsheet.
+	var names: Array[String] = []
+	for key in content:
+		names.append(String(key))
+	return names
+
+
 func material_cost(material: String) -> int:
 	if not content.has(material):
 		return -1

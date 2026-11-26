@@ -3,13 +3,27 @@ extends Control
 ## One press, one furnace, five starter materials, one active order.
 ## Greybox only: every station is a labelled panel with a large button
 ## and a progress bar. No extra machines, modes, or automation.
+##
+## Progression: every 2 completed orders unlocks the next material from
+## the locked v1 list (data/content.csv), so the market and the order
+## queue grow from the starter five toward all 14 materials. That is the
+## replay hook — new scrap, new products, and higher payouts to come back
+## for — on top of the press/furnace upgrade tiers.
+##
+## Feedback: each finished press/melt cycle flashes its progress bar
+## bright and fades back, so the crush and the melt read as an event
+## even in greybox, before any art or sound is added.
 
 const SAVE_PATH := "user://save.json"
+# Every N completed orders unlocks the next material from the v1 list.
+const UNLOCK_EVERY_ORDERS := 2
 
 var economy: Economy
 var inventory: Dictionary = {}  # item name -> count
 var active_order: Dictionary = {}  # {product, payout}
 var order_index: int = 0
+var orders_completed: int = 0
+var unlocked_materials: Array[String] = []
 var press_material: String = ""
 var press_progress: float = 0.0
 var press_running: bool = false
@@ -35,6 +49,7 @@ var status_text: String = "Welcome! Check the order, then buy scrap."
 func _ready() -> void:
 	economy = Economy.new()
 	load_save()
+	refresh_unlocks()
 	if active_order.is_empty():
 		next_order()
 	build_market()
@@ -57,6 +72,7 @@ func _process(delta: float) -> void:
 			add_item("Crushed " + press_material, 1)
 			status_text = "Pressed! Crushed %s is ready for the furnace." % press_material
 			press_material = ""
+			pulse_bar(press_bar)
 			save_game()
 			refresh_ui()
 	if melt_running:
@@ -67,23 +83,50 @@ func _process(delta: float) -> void:
 			molten_material = melt_material
 			status_text = "Melted! Molten %s is ready to cast." % melt_material
 			melt_material = ""
+			pulse_bar(melt_bar)
 			save_game()
 			refresh_ui()
 
 
+func pulse_bar(bar: ProgressBar) -> void:
+	# Crush/melt feedback: the finished station's bar flashes bright,
+	# then fades back to normal. Greybox only — no art or audio needed.
+	bar.modulate = Color(1.8, 1.8, 1.8)
+	var tween := create_tween()
+	tween.tween_property(bar, "modulate", Color.WHITE, 0.5)
+
+
+func refresh_unlocks() -> Array[String]:
+	# Rebuild the unlocked-materials list from completed orders and
+	# return the materials added by this call. _ready() ignores the
+	# return value; the seller uses it to announce a fresh unlock.
+	var all := economy.all_materials()
+	var count := mini(economy.starter_materials.size() + orders_completed / UNLOCK_EVERY_ORDERS, all.size())
+	var newly: Array[String] = []
+	for i in range(unlocked_materials.size(), count):
+		newly.append(all[i])
+	unlocked_materials.clear()
+	for i in range(count):
+		unlocked_materials.append(all[i])
+	return newly
+
+
 func build_market() -> void:
 	market_list.clear()
-	for material in economy.starter_materials:
+	for material in unlocked_materials:
 		var cost := economy.material_cost(material)
 		market_list.add_item("%s — %d coins" % [material, cost])
 
 
 func next_order() -> void:
-	# Orders cycle through the starter products so the first 10 minutes
+	# Orders cycle through the products of unlocked materials, so the
+	# order queue grows as the player unlocks new scrap. The first five
 	# match the README timeline: iron, copper, aluminum, steel, brass...
-	var products: Array[String] = [
-		"Iron Ingot", "Copper Ingot", "Aluminum Ingot", "Steel Beam", "Brass Gear",
-	]
+	var products: Array[String] = []
+	for material in unlocked_materials:
+		products.append(economy.product_for(material))
+	if products.is_empty():
+		products = ["Iron Ingot"]
 	var product: String = products[order_index % products.size()]
 	order_index += 1
 	active_order = {"product": product, "payout": economy.sell_price_for(product)}
@@ -103,7 +146,7 @@ func take_item(item: String, amount: int) -> bool:
 
 
 func _on_market_selected(index: int) -> void:
-	var material: String = economy.starter_materials[index]
+	var material: String = unlocked_materials[index]
 	var cost := economy.material_cost(material)
 	if not economy.spend(cost):
 		status_text = "Not enough coins for %s (%d coins)." % [material, cost]
@@ -118,7 +161,7 @@ func _on_market_selected(index: int) -> void:
 func _on_press_pressed() -> void:
 	if press_running:
 		return
-	for material in economy.starter_materials:
+	for material in unlocked_materials:
 		if int(inventory.get(material, 0)) > 0:
 			take_item(material, 1)
 			press_material = material
@@ -134,7 +177,7 @@ func _on_press_pressed() -> void:
 func _on_melt_pressed() -> void:
 	if melt_running or molten_material != "":
 		return
-	for material in economy.starter_materials:
+	for material in unlocked_materials:
 		var crushed := "Crushed " + material
 		if int(inventory.get(crushed, 0)) > 0:
 			take_item(crushed, 1)
@@ -171,7 +214,12 @@ func _on_sell_pressed() -> void:
 		return
 	var payout := int(active_order["payout"])
 	economy.earn(payout)
+	orders_completed += 1
+	var newly := refresh_unlocks()
 	status_text = "Sold %s for %d coins! Order complete." % [product, payout]
+	if not newly.is_empty():
+		status_text += " New scrap unlocked: %s." % ", ".join(newly)
+		build_market()
 	next_order()
 	save_game()
 	refresh_ui()
@@ -222,6 +270,7 @@ func save_game() -> void:
 		"inventory": inventory,
 		"active_order": active_order,
 		"order_index": order_index,
+		"orders_completed": orders_completed,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file != null:
@@ -243,3 +292,4 @@ func load_save() -> void:
 	inventory = data.get("inventory", {})
 	active_order = data.get("active_order", {})
 	order_index = int(data.get("order_index", 0))
+	orders_completed = int(data.get("orders_completed", 0))
